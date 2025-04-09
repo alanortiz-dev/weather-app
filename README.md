@@ -47,12 +47,23 @@ cd weather-app
 npm install
 npm run dev
 ```
+4. Crea un archivo .env en la raíz del proyecto con tu clave de OpenWeatherMap
+```bash
+NEXT_PUBLIC_OPENWEATHER_API_KEY=tu_api_key_aqui
+```
+- Nota: Puedes generar la api key desde:
+    * https://home.openweathermap.org/api_keys
+
 ## 🧠 Lo que puedes aprender
 - Conexión y consumo de APIs REST públicas
 - Manejo de errores con try/catch y validación de respuestas
 - Estructura modular de componentes en Next.js
 - Buenas prácticas de diseño responsive con Tailwind
 - Renderizado condicional y estado en React
+
+## 🔗 Vista previa en línea
+Y finalmente, puedes ver la aplicación funcionando en linea aquí:  
+👉 [WeatherApp](https://weather-app-five-iota-91.vercel.app)
 
 ---
 
