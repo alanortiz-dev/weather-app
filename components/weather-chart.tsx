@@ -1,60 +1,79 @@
-'use client';
+// weather-chart.tsx
+// Genera la gráfica de temperaturas máximas y mínimas de los próximos días usando Recharts
 
+import React from 'react';
 import {
+  ResponsiveContainer,
   LineChart,
   Line,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
+  CartesianGrid,
 } from 'recharts';
-import type { WeatherData } from '@/lib/types';
 
-interface WeatherChartProps {
-  data: WeatherData['daily'];
+// Definimos cómo luce cada día del pronóstico
+interface Day {
+  date: string;
+  temp?: {
+    min: number;
+    max: number;
+  };
 }
 
-export function WeatherChart({ data }: WeatherChartProps) {
-  const chartData = data.map((day) => ({
-    name: day.date,
-    max: day.temp.max,
-    min: day.temp.min,
-  }));
+// Recibimos los datos como prop
+interface Props {
+  data: Day[];
+}
+
+export function WeatherChart({ data }: Props) {
+  // Aquí filtramos los datos por si alguna entrada no tiene temperaturas definidas
+  const chartData = data
+    .filter(
+      (day) =>
+        day.temp &&
+        typeof day.temp.max === 'number' &&
+        typeof day.temp.min === 'number'
+    )
+    .map((day) => ({
+      name: day.date,         // Día en el eje X
+      max: day.temp!.max,     // Temperatura máxima
+      min: day.temp!.min,     // Temperatura mínima
+    }));
+
+   // Mostrar los datos por consola para debugging (Solo descomentar si es necesario)
+  // console.log('Datos para la gráfica:', chartData);
 
   return (
-    <div className="w-full h-[300px] mt-8">
+    <div className="w-full h-64">
+      {/* Gráfica responsiva con líneas para min/max temperaturas */}
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-          <XAxis
-            dataKey="name"
-            className="text-xs text-muted-foreground"
-          />
-          <YAxis
-            className="text-xs text-muted-foreground"
-            unit="°C"
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: 'hsl(var(--background))',
-              border: '1px solid hsl(var(--border))',
-            }}
-          />
+          {/* Fondo con líneas de ayuda */}
+          <CartesianGrid strokeDasharray="3 3" />
+
+          {/* Eje X con los nombres de los días */}
+          <XAxis dataKey="name" stroke="#8884d8" />
+
+          {/* Eje Y con las temperaturas */}
+          <YAxis stroke="#8884d8" />
+
+          {/* Tooltip al pasar el mouse */}
+          <Tooltip />
+
+          {/* Línea para temperaturas máximas */}
           <Line
             type="monotone"
             dataKey="max"
-            stroke="hsl(var(--chart-1))"
-            strokeWidth={2}
-            dot={false}
+            stroke="#f87171"
             name="Máxima"
           />
+
+          {/* Línea para temperaturas mínimas */}
           <Line
             type="monotone"
             dataKey="min"
-            stroke="hsl(var(--chart-2))"
-            strokeWidth={2}
-            dot={false}
+            stroke="#60a5fa"
             name="Mínima"
           />
         </LineChart>
