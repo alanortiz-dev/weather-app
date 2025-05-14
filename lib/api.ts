@@ -3,9 +3,9 @@ const BASE_URL = 'https://api.openweathermap.org/data/2.5';
 const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
 
 // Busca coordenadas geográficas de una ciudad usando la API de OpenWeather
-export async function getCityCoordinates (query: string) {
+export async function getCityCoordinates(query: string) {
   if (!query) return [];
-  
+
   if (!API_KEY) {
     throw new Error('API key no configurada');
   }
@@ -14,12 +14,12 @@ export async function getCityCoordinates (query: string) {
     const response = await fetch(
       `${GEO_URL}/direct?q=${encodeURIComponent(query)}&limit=5&appid=${API_KEY}&lang=es`
     );
-    
+
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(`Error: ${errorData.message}`);
     }
-    
+
     const data = await response.json();
     return data.map((city: any) => ({
       name: city.name,
@@ -72,17 +72,19 @@ export async function getWeatherData(lat: number, lon: number) {
           min: Math.round(day.main.temp_min),
           max: Math.round(day.main.temp_max),
         },
-        condition: day.weather[0].description,
-        icon: day.weather[0].icon,
+        main: day.weather[0].main,
+        description: day.weather[0].description,
       }));
 
     return {
       city: currentData.name,
       current: {
         temp: Math.round(currentData.main.temp),
-        condition: currentData.weather[0].description,
+        main: currentData.weather[0].main,
+        description: currentData.weather[0].description,
         icon: currentData.weather[0].icon,
       },
+
       daily: dailySummary,
     };
   } catch (error) {

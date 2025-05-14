@@ -8,31 +8,40 @@ import type { City, WeatherData } from '@/lib/types';
 import { Cloud, Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
+// Maneja todas las condiciones posibles sin romper si viene undefined
+function getWeatherBackground(condition?: string): string {
+  if (!condition) {
+    return 'from-slate-200 via-slate-300 to-slate-400 dark:from-slate-700 dark:via-slate-800 dark:to-slate-900';
+  }
+
+  const cond = condition.toLowerCase();
+
+  if (cond.includes('clear')) return 'from-yellow-100 via-orange-300 to-pink-400 dark:from-yellow-300 dark:via-orange-500 dark:to-pink-600';
+  if (cond.includes('cloud')) return 'from-gray-300 via-gray-400 to-gray-500 dark:from-gray-600 dark:via-gray-700 dark:to-gray-800';
+  if (cond.includes('rain') || cond.includes('drizzle')) return 'from-blue-300 via-blue-500 to-indigo-600 dark:from-blue-700 dark:via-indigo-800 dark:to-gray-900';
+  if (cond.includes('thunder')) return 'from-purple-800 via-indigo-900 to-black';
+  if (cond.includes('snow')) return 'from-blue-100 via-white to-gray-200 dark:from-gray-300 dark:via-gray-400 dark:to-gray-500';
+  if (cond.includes('mist') || cond.includes('haze') || cond.includes('fog')) return 'from-gray-200 via-gray-300 to-gray-400 dark:from-gray-600 dark:via-gray-700 dark:to-gray-800';
+  if (cond.includes('smoke') || cond.includes('ash')) return 'from-zinc-300 via-neutral-400 to-stone-500 dark:from-zinc-700 dark:via-neutral-800 dark:to-stone-900';
+  if (cond.includes('dust') || cond.includes('sand')) return 'from-yellow-200 via-yellow-300 to-amber-400 dark:from-yellow-600 dark:via-amber-700 dark:to-yellow-800';
+  if (cond.includes('squall')) return 'from-cyan-400 via-blue-500 to-indigo-700 dark:from-cyan-700 dark:via-blue-800 dark:to-indigo-900';
+  if (cond.includes('tornado')) return 'from-red-500 via-gray-700 to-black dark:from-red-800 dark:via-gray-900 dark:to-black';
+
+  return 'from-slate-200 via-slate-300 to-slate-400 dark:from-slate-700 dark:via-slate-800 dark:to-slate-900';
+}
+
 export default function Home() {
-  // Aquí guardamos la info del clima cuando el usuario busca una ciudad
   const [weather, setWeather] = useState<WeatherData | null>(null);
-
-  // Este estado es para mostrar el spinner mientras cargan los datos
   const [isLoading, setIsLoading] = useState(false);
-
-  // Hook para mostrar notificaciones (toast) si algo sale mal
   const { toast } = useToast();
 
-  // Esta función se dispara cuando el usuario elige una ciudad del buscador
   const handleCitySelect = async (city: City) => {
-    setIsLoading(true); // Mostramos el spinner
-
+    setIsLoading(true);
     try {
-      // Llamamos a la API con latitud y longitud
       const data = await getWeatherData(city.lat, city.lon);
-
-      // Le agregamos el nombre de la ciudad para mostrarlo más fácil
       data.city = `${city.name}, ${city.country}`;
-
-      // Guardamos los datos en el estado
       setWeather(data);
     } catch (error) {
-      // Si algo falla, mostramos un toast con el mensaje de error
       toast({
         variant: "destructive",
         title: "Error",
@@ -40,52 +49,47 @@ export default function Home() {
       });
       console.error(error);
     } finally {
-      // Quitamos el spinner pase lo que pase
       setIsLoading(false);
     }
   };
 
+  console.log("Condición del clima (main):", weather?.current?.main);
+  console.log("Descripción (es):", weather?.current?.description);
+
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      {/* Componente para buscar una ciudad */}
+    <main className={`min-h-screen bg-gradient-to-br text-foreground transition-all duration-500 ${
+      getWeatherBackground(weather?.current?.main)
+    }`}>
       <SearchBar onCitySelect={handleCitySelect} />
-      
+
       <div className="max-w-2xl mx-auto p-4">
         {isLoading ? (
-          // Si está cargando, mostramos el ícono girando
           <div className="flex items-center justify-center h-[400px]">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : !weather ? (
-          // Si no hay datos aún, mostramos un mensaje amigable
           <div className="flex flex-col items-center justify-center h-[400px] text-muted-foreground">
             <Cloud className="h-16 w-16 mb-4" />
             <p>Busca una ciudad para ver el clima</p>
           </div>
         ) : (
-          // Si ya tenemos datos, mostramos la info del clima
-          <div className="space-y-8">
+          <div className="backdrop-blur-md bg-white/30 dark:bg-black/30 rounded-2xl p-6 shadow-lg border border-white/20 space-y-8">
             <div className="text-center">
-              {/* Nombre de la ciudad */}
-              <h1 className="text-2xl font-bold mb-4">{weather.city}</h1>
-
-              {/* Ícono del clima y temperatura */}
+              <h1 className="text-4xl font-bold mb-4 text-primary drop-shadow-md">{weather.city}</h1>
               <div className="flex items-center justify-center gap-4">
                 <img
                   src={`https://openweathermap.org/img/wn/${weather.current.icon}@2x.png`}
-                  alt={weather.current.condition}
-                  className="w-20 h-20"
+                  alt={weather.current.description}
+                  className="w-20 h-20 animate-bounce"
                 />
                 <div>
                   <p className="text-4xl font-bold">{weather.current.temp}°C</p>
                   <p className="text-muted-foreground capitalize">
-                    {weather.current.condition}
+                    {weather.current.description}
                   </p>
                 </div>
               </div>
             </div>
-            
-            {/* Componente con la gráfica de los próximos días */}
             <WeatherChart data={weather.daily} />
           </div>
         )}

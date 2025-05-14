@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
@@ -15,29 +15,19 @@ interface SearchBarProps {
 }
 
 export function SearchBar({ onCitySelect }: SearchBarProps) {
-  // Estado para guardar el texto que escribe el usuario
   const [query, setQuery] = useState('');
-
-  // Estado con las ciudades que devuelve la API
   const [cities, setCities] = useState<City[]>([]);
-
-  // Esto indica si estamos esperando resultados (sirve para deshabilitar el input)
   const [isLoading, setIsLoading] = useState(false);
-
-  const { toast } = useToast(); // Hook para mostrar errores
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Esperamos 300ms antes de hacer la búsqueda (debounce)
     const searchTimeout = setTimeout(async () => {
-      // Solo buscamos si hay más de 2 caracteres
       if (query.length > 2) {
         setIsLoading(true);
         try {
-          // Buscamos en la API las coordenadas de la ciudad
           const results = await getCityCoordinates(query);
           setCities(results);
         } catch (error) {
-          // Si algo sale mal, mostramos un mensaje
           console.error('Error buscando ciudades:', error);
           toast({
             variant: "destructive",
@@ -49,12 +39,10 @@ export function SearchBar({ onCitySelect }: SearchBarProps) {
           setIsLoading(false);
         }
       } else {
-        // Si hay menos de 3 caracteres, limpiamos la lista
         setCities([]);
       }
     }, 300);
 
-    // Limpiamos el timeout si el usuario sigue escribiendo
     return () => clearTimeout(searchTimeout);
   }, [query, toast]);
 
@@ -62,40 +50,45 @@ export function SearchBar({ onCitySelect }: SearchBarProps) {
     <div className="w-full max-w-2xl mx-auto p-4">
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          {/* Input de búsqueda con ícono */}
+          {/* Input de búsqueda */}
           <Input
             type="text"
             placeholder="Buscar ciudad..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="pl-10"
-            disabled={isLoading}
+            className="pl-10 pr-10"
           />
+
+          {/* Ícono de búsqueda */}
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
 
+          {/* Spinner de carga */}
+          {isLoading && (
+            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+          )}
+
           {/* Lista de ciudades encontradas */}
-          {cities.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg z-10">
-              {cities.map((city) => (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg z-10">
+            {cities.length > 0 ? (
+              cities.map((city) => (
                 <Button
                   key={`${city.lat}-${city.lon}`}
                   variant="ghost"
                   className="w-full justify-start"
                   onClick={() => {
-                    // Cuando el usuario selecciona una ciudad
-                    onCitySelect(city); // Llamamos al callback con la ciudad
-                    setQuery('');        // Limpiamos el input
-                    setCities([]);       // Y limpiamos los resultados
+                    onCitySelect(city);
+                    setQuery('');
+                    setCities([]);
                   }}
                 >
                   {city.name}, {city.country}
                 </Button>
-              ))}
-            </div>
-          )}
+              ))
+            ) : null}
+          </div>
         </div>
 
-        {/* Botón para cambiar entre tema claro / oscuro */}
+        {/* Botón de tema */}
         <ThemeToggle />
       </div>
     </div>
